@@ -10,6 +10,7 @@ static bno085_evt_handler_t m_callback = 0;
 static db1_hal_t *m_db1_hal = 0;
 static uint8_t m_dev_addr = BNO085_DEFAULT_ADDR;
 static db1_imu_settings_t m_current_settings;
+static bool m_data_recv = false;
 
 //Forward Declarations
 static int      db1_bno_open(sh2_Hal_t *hal);
@@ -104,7 +105,18 @@ bool bno085_begin()
 
     sh2_setSensorCallback(bno085_sensor_callback, 0);
 
-    return bno085_set_reports();
+    bool res = bno085_set_reports();
+
+    if(!res)
+        return false;
+
+    while(m_data_recv == false)
+    {
+        m_db1_hal->delay_ms(10);
+        sh2_service();
+    }
+
+    return true;
 }
 
 void bno085_hardware_reset()
@@ -232,6 +244,7 @@ static void bno085_sensor_callback(void *cookie, sh2_SensorEvent_t *pEvent)
         break;
     
     case SH2_ROTATION_VECTOR:
+        m_data_recv = true;
         q.r = val.un.rotationVector.real,
         q.i = val.un.rotationVector.i,
         q.j = val.un.rotationVector.j,

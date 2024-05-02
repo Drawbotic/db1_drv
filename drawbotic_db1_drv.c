@@ -35,28 +35,28 @@ void db1_m1_encoder_callback()
 {
     uint8_t m1_a_state = m_hal->digital_read(m_hal->pins.m1_e_a);
 
-    if(m1_a_state != m_encoder_last_a_state[DB1_M_1] && m1_a_state == 1)
+    if(m1_a_state != m_encoder_last_a_state[DB1_M1] && m1_a_state == 1)
     {
         if(m_hal->digital_read(m_hal->pins.m1_e_b) != m1_a_state)
-            m_encoders[DB1_M_1]--;
+            m_encoders[DB1_M1]--;
         else
-            m_encoders[DB1_M_1]++;
+            m_encoders[DB1_M1]++;
     }
-    m_encoder_last_a_state[DB1_M_1] = m1_a_state;
+    m_encoder_last_a_state[DB1_M1] = m1_a_state;
 }
 
 void db1_m2_encoder_callback()
 {
     uint8_t m2_a_state = m_hal->digital_read(m_hal->pins.m2_e_a);
 
-    if(m2_a_state != m_encoder_last_a_state[DB1_M_2] && m2_a_state == 1)
+    if(m2_a_state != m_encoder_last_a_state[DB1_M2] && m2_a_state == 1)
     {
         if(m_hal->digital_read(m_hal->pins.m2_e_b) != m2_a_state)
-            m_encoders[DB1_M_2]++;
+            m_encoders[DB1_M2]++;
         else
-            m_encoders[DB1_M_2]--;
+            m_encoders[DB1_M2]--;
     }
-    m_encoder_last_a_state[DB1_M_2] = m2_a_state;
+    m_encoder_last_a_state[DB1_M2] = m2_a_state;
 }
 
 void db1_imu_int_callback(bno085_evt_t evt, void *p_data)
@@ -301,8 +301,8 @@ void db1_calibrate_ir_array()
     m_ir_high.right     = 0;
     m_ir_high.far_right = 0;
 
-    db1_set_motor_speed(DB1_M_1, 0.1);
-    db1_set_motor_speed(DB1_M_2, -0.1);
+    db1_set_motor_speed(DB1_M1, 0.1);
+    db1_set_motor_speed(DB1_M2, -0.1);
 
     for(int i = 0; i < DB1_IR_CALIBRATION_COUNT; i++)
     {
@@ -334,8 +334,8 @@ void db1_calibrate_ir_array()
         
         m_hal->delay_ms(DB1_IR_CALIBRATION_DELAY_MS);
     }
-    db1_set_motor_speed(DB1_M_1, 0);
-    db1_set_motor_speed(DB1_M_2, 0);
+    db1_set_motor_speed(DB1_M1, 0);
+    db1_set_motor_speed(DB1_M2, 0);
 }
 
 void db1_set_ir_calibration(db1_ir_array_t low, db1_ir_array_t high)
@@ -495,7 +495,7 @@ void db1_set_motor_speed(db1_motor_t motor, float speed)
 
     switch(motor)
     {
-    case DB1_M_1:
+    case DB1_M1:
         if(direction)
         {
             m_hal->digital_write(m_hal->pins.m1_dir_a, 1);
@@ -508,7 +508,7 @@ void db1_set_motor_speed(db1_motor_t motor, float speed)
         }
         m_hal->analog_write(m_hal->pins.m1_pwm, pwm_val);
         break;
-    case DB1_M_2:
+    case DB1_M2:
         if(direction)
         {
             m_hal->digital_write(m_hal->pins.m2_dir_a, 0);
@@ -540,8 +540,8 @@ long db1_encoder_delta(db1_motor_t motor)
 
 void db1_reset_encoder_deltas()
 {
-    m_last_encoders[DB1_M_1] = 0;
-    m_last_encoders[DB1_M_2] = 0;
+    m_last_encoders[DB1_M1] = m_encoders[DB1_M1];
+    m_last_encoders[DB1_M2] = m_encoders[DB1_M2];
 }
 
 db1_colour_reading_t db1_read_colour(bool calibrated)

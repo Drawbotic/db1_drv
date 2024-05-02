@@ -118,8 +118,8 @@ db1_tof_location_t;
 
 typedef enum
 {
-    DB1_M_1 = 0,
-    DB1_M_2 = 1,
+    DB1_M1 = 0,
+    DB1_M2 = 1,
 }
 db1_motor_t;
 

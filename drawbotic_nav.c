@@ -10,7 +10,7 @@
 #define ENC_BITS_P_MM   2.3433f    // encoder signals per rotation (295.6793)/wheel circum (40pi)
 #define BOT_RADIUS      60
 #define IMU_TOLERANCE   0.2f
-#define SPEED_MIN       0.045f
+#define SPEED_MIN       0.06f
 #define ROTATE_KP       0.03f
 #define FORWARD_KP      0.01f
 
@@ -22,19 +22,20 @@ typedef bool (*db1_nav_function_t)(db1_nav_action_t*);
 bool db1_nav_forward(db1_nav_action_t *action)
 {
     float enc_limit = action->desired_distance *  ENC_BITS_P_MM * FORWARD_ERROR;
-    int enc_error = enc_limit - action->progress;
+    float enc_error = enc_limit - action->progress;
 
     if(enc_error > 0)
     {
         float power = db1_constrainf(m_speed * (enc_error * FORWARD_KP), SPEED_MIN, m_speed);
-        float m1_delta = db1_encoder_delta(DB1_M_1);
-        float m2_delta = db1_encoder_delta(DB1_M_2);
-        float error = m1_delta - m2_delta;
-        action->follow_speed += error + m_cp;
+        
+        float d1 = db1_encoder_delta(DB1_M1);
+        float d2 = db1_encoder_delta(DB1_M2);
+        float error = d1 - d2;
+        action->follow_speed += error * m_cp;
 
-        db1_set_motor_speed(DB1_M_1, power);
-        db1_set_motor_speed(DB1_M_2, action->follow_speed);
-        action->progress += m1_delta;
+        db1_set_motor_speed(DB1_M1, power);
+        db1_set_motor_speed(DB1_M2, action->follow_speed);
+        action->progress += d1;
         return false;
     }
     return true;
@@ -44,8 +45,8 @@ bool db1_nav_turn(db1_nav_action_t *action)
 {
     if(action->progress < fabsf(action->desired_angle))
     {
-        float d1 = db1_encoder_delta(DB1_M_1);
-        float d2 = db1_encoder_delta(DB1_M_2);
+        float d1 = db1_encoder_delta(DB1_M1);
+        float d2 = db1_encoder_delta(DB1_M2);
 
         if(action->desired_angle >= 0)
         {
@@ -59,8 +60,8 @@ bool db1_nav_turn(db1_nav_action_t *action)
 
             action->follow_speed += error * m_cp;
 
-            db1_set_motor_speed(DB1_M_1, m_speed);
-            db1_set_motor_speed(DB1_M_2, action->follow_speed * multiplier);
+            db1_set_motor_speed(DB1_M1, m_speed);
+            db1_set_motor_speed(DB1_M2, action->follow_speed * multiplier);
 
             action->progress += (180 * d1) / (M_PI * ENC_BITS_P_MM * r1 * L_TURN_ERROR);
             return false;
@@ -77,8 +78,8 @@ bool db1_nav_turn(db1_nav_action_t *action)
 
             action->follow_speed += error * m_cp;
 
-            db1_set_motor_speed(DB1_M_1, action->follow_speed * multiplier);
-            db1_set_motor_speed(DB1_M_2, m_speed);
+            db1_set_motor_speed(DB1_M1, action->follow_speed * multiplier);
+            db1_set_motor_speed(DB1_M2, m_speed);
 
             action->progress += (180 * d2) / (M_PI * ENC_BITS_P_MM * r2 * L_TURN_ERROR);
             return false;
@@ -90,6 +91,15 @@ bool db1_nav_turn(db1_nav_action_t *action)
 bool db1_nav_rotate(db1_nav_action_t *action)
 {
     float current_angle = db1_read_orientation().heading;
+    if(action->final_angle < 0)
+    {
+        action->final_angle = current_angle + action->desired_angle;
+
+        if(action->final_angle >= 360.0f)
+            action->final_angle -= 360.0f;
+        else if(action->final_angle < 0)
+            action->final_angle += 360.0f;
+    }
 
     //error calculation performed in millidegrees to allow for modulus operations
     float error = (int)((current_angle - action->final_angle + 540) * 1000) % 360000 - 180000;
@@ -97,18 +107,18 @@ bool db1_nav_rotate(db1_nav_action_t *action)
     error /= 1000;
 
     if(error > -IMU_TOLERANCE && error < IMU_TOLERANCE) 
-        return true;
+        return true;    //Within tolerance, we're done
 
     float power = db1_constrainf(m_speed * (ROTATE_KP * fabsf(error)), SPEED_MIN, m_speed);
     if(error > 0)
     {
-        db1_set_motor_speed(DB1_M_1, -power);
-        db1_set_motor_speed(DB1_M_2, power);
+        db1_set_motor_speed(DB1_M1, -power);
+        db1_set_motor_speed(DB1_M2, power);
     }
     else
     {
-        db1_set_motor_speed(DB1_M_1, power);
-        db1_set_motor_speed(DB1_M_2, -power);
+        db1_set_motor_speed(DB1_M1, power);
+        db1_set_motor_speed(DB1_M2, -power);
     }
 
     return false;
@@ -119,8 +129,8 @@ bool db1_nav_stop(db1_nav_action_t *action)
     if(action->final_time < 0)
         action->final_time = db1_millis() + action->desired_time;
     
-    db1_set_motor_speed(DB1_M_1, 0);
-    db1_set_motor_speed(DB1_M_2, 0);
+    db1_set_motor_speed(DB1_M1, 0);
+    db1_set_motor_speed(DB1_M2, 0);
 
     action->progress = db1_millis();
 
@@ -173,14 +183,7 @@ void db1_nav_build_rotate_action(float angle_deg, db1_nav_action_t *action)
     action->desired_angle = angle_deg;
     action->follow_speed = m_speed;
     action->progress = 0;
-
-    float current_angle = db1_read_orientation().heading;
-    action->final_angle = current_angle + action->desired_angle;
-
-    if(action->final_angle >= 360.0f)
-        action->final_angle -= 360.0f;
-    else if(action->final_angle < 0)
-        action->final_angle += 360.0f;
+    action->final_angle = -1;
 }
 
 void db1_nav_build_stop_action(float time_ms, db1_nav_action_t *action)
