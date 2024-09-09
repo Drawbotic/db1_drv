@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//! Number of Motors on board
 #define DB1_MOTOR_COUNT         2
 //! Number of RGB LEDs on board
 #define DB1_LIGHT_COUNT         8
@@ -72,6 +73,9 @@
     .ir_window_size = DB1_COLOUR_CALIBRATION_COUNT, \
 }
 
+/*!
+ * \brief Enum describing the Colour sensor integration times
+ */
 typedef enum
 {
     VEML6040_INT_40MS   = 0x00,
@@ -83,6 +87,9 @@ typedef enum
 }
 veml6040_int_time_t;
 
+/*!
+ * \brief Enum describing the Time of Flight operation modes
+ */
 typedef enum {
     VL53L0X_SENSE_DEFAULT = 0,
     VL53L0X_SENSE_LONG_RANGE,
@@ -108,6 +115,9 @@ typedef enum
 }
 db1_error_t;
 
+/*!
+ * \brief Enum describing the Time of Flight sensor locations
+ */
 typedef enum
 {
     DB1_TOF_LEFT   = 0,
@@ -116,6 +126,9 @@ typedef enum
 }
 db1_tof_location_t;
 
+/*!
+ * \brief Enum describing the motor positions
+ */
 typedef enum
 {
     DB1_M1 = 0,
@@ -123,98 +136,131 @@ typedef enum
 }
 db1_motor_t;
 
+/*!
+ * \brief A struct containing the settings for the Pen Lift Servo
+ */
 typedef struct
 {
-    double pen_up_pos;
-    double pen_down_pos;
+    double pen_up_pos; //!< The servo position for when the pen is up
+    double pen_down_pos; //!< The servo position for when the pen is down
 }
 db1_servo_settings_t;
 
+/*!
+ * \brief A struct containing the settings for the VL53L0X Time of Flight sensors
+ */
 typedef struct
 {
-    vl53l0x_config_t ranging_type;
-    uint32_t continuous_rate;
-    uint32_t measurement_timing_budget;
-    uint8_t pre_pclks;
-    uint8_t final_pclks;
+    vl53l0x_config_t ranging_type; //!< The ranging operation mode for the sensor
+    uint32_t continuous_rate; //!< The sample rate of the sensor in continuous mode
+    uint32_t measurement_timing_budget; //!< The total measurement timing budget in microseconds, this is overall time each measurement takes.
+    uint8_t pre_pclks; //!< The Pre VCSEL Pulse Period
+    uint8_t final_pclks; //!< The Final VCSEL Pulse Period
 }
 db1_tof_settings_t;
 
+/*!
+ * \brief A struct containing the settings for the BNO085 IMU
+ */
 typedef struct
 {
-    uint32_t rotation_interval_us;
-    uint32_t accel_interval_us;
-    float bump_acc_threshold;
-    uint32_t bump_step_threshold;
+    uint32_t rotation_interval_us; //!< The sample rate of the orientation in microseconds
+    uint32_t accel_interval_us; //!< The sample rate of the acceleration in microseconds
+    float bump_acc_threshold; //!< The acceleration threshold that must be past to trigger a bump in m/s
+    uint32_t bump_step_threshold; //!< The number of steps (measurements) that must be over the threshold to trigger a bump
 }
 db1_imu_settings_t;
 
+/*!
+ * \brief A struct containing all of the settings need to initialise DB1
+ */
 typedef struct
 {
-    db1_servo_settings_t pen;
-    vl53l0x_config_t tofs[DB1_TOF_COUNT];
-    db1_imu_settings_t imu;
-    veml6040_int_time_t colour_int_time;
-    bool use_encoders;
-    uint8_t ir_window_size;
+    db1_servo_settings_t pen; //!< The Pen Servo settings, see db1_servo_settings_t
+    vl53l0x_config_t tofs[DB1_TOF_COUNT]; //!< The ranging type for each Time of FLight sensor, see vl53l0x_config_t
+    db1_imu_settings_t imu; //!< The IMU settings, see db1_imu_settings_t
+    veml6040_int_time_t colour_int_time; //!< The integration time for the colour sensor, see veml6040_int_time_t
+    bool use_encoders;  //!< Sets if the encoders should be enabled
+    uint8_t ir_window_size; //!< Sets the sliding average window size for reading the IR line detectors, higher values increase accuracy but changes take longer to appear
 }
 db1_settings_t;
 
+/*!
+ * \brief A struct used to represent the state of the IR line detectors
+ */
 typedef struct
 {
-    uint32_t far_left;
-    uint32_t left;
-    uint32_t centre;
-    uint32_t right;
-    uint32_t far_right;
+    uint32_t far_left; //!< The value of the far left IR line detector
+    uint32_t left; //!< The value of the left IR line detector
+    uint32_t centre; //!< The value of the centre IR line detector
+    uint32_t right; //!< The value of the right IR line detector
+    uint32_t far_right; //!< The value of the far right IR line detector
 }
 db1_ir_array_t;
 
+/*!
+ * \brief A struct to represent a colour for the RGB LEDs
+ */
 typedef struct
 {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+    uint8_t r; //!< The red component
+    uint8_t g; //!< The green component
+    uint8_t b; //!< The blue component
 }
 db1_colour_t;
 
+/*!
+ * \brief A struct to represent a colour read from the colour sensor
+ */
 typedef struct
 {
-    uint32_t r;
-    uint32_t g;
-    uint32_t b;
-    uint32_t w;
+    uint32_t r; //!< The red component
+    uint32_t g; //!< The green component
+    uint32_t b; //!< The blue component
+    uint32_t w; //!< The white component
 }
 db1_colour_reading_t;
 
+/*!
+ * \brief A struct containing the RGB colours for all of the RGB LEDs on board
+ */
 typedef struct
 {
-    db1_colour_t led[DB1_LIGHT_COUNT];
+    db1_colour_t led[DB1_LIGHT_COUNT]; //!< An array containing the colour value for each light
 }
 db1_lights_t;
 
+/*!
+ * \brief A 4D quaternion stuct used to represent DB1 orientation
+ */
 typedef struct
 {
-    float r;
-    float i;
-    float j;
-    float k;
+    float r; //!< The real component
+    float i; //!< The i component
+    float j; //!< The j component
+    float k; //!< The k component
 }
 db1_quaternion_t;
 
+/*!
+ * \brief A 3D vector struct used to represent DB1 acceleration
+ */
 typedef struct
 {
-    float x;
-    float y;
-    float z;
+    float x; //!< The x component
+    float y; //!< The y component
+    float z; //!< The z component
 }
 db1_vector_t;
 
+/*!
+ * \brief A struct used to represent the Euler Orientation of the DB1
+ */
 typedef struct
 {
-    float heading;
-    float pitch;
-    float roll;
+    float heading; //!< The heading (Z) component
+    float pitch; //!< The pitch (X) component
+    float roll; //!< The roll (Y) component
 }
 db1_orientation_t;
 
