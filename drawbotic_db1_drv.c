@@ -116,8 +116,6 @@ db1_error_t db1_init_motors(bool use_encoders)
 {
     m_current_settings.use_encoders = use_encoders;
 
-    m_hal->analog_resolution(16);
-
     m_hal->set_pinmode(m_hal->pins.m1_dir_a, DB1_HAL_PIN_OUT);
     m_hal->set_pinmode(m_hal->pins.m1_dir_b, DB1_HAL_PIN_OUT);
     m_hal->set_pinmode(m_hal->pins.m2_dir_a, DB1_HAL_PIN_OUT);
@@ -287,7 +285,7 @@ db1_settings_t db1_get_current_settings()
     return m_current_settings;
 }
 
-void db1_calibrate_ir_array()
+void db1_calibrate_ir_array(uint8_t analogResolution)
 {
     m_ir_low.far_left  = 1024;
     m_ir_low.left      = 1024;
@@ -301,8 +299,8 @@ void db1_calibrate_ir_array()
     m_ir_high.right     = 0;
     m_ir_high.far_right = 0;
 
-    db1_set_motor_speed(DB1_M1, 0.1);
-    db1_set_motor_speed(DB1_M2, -0.1);
+    db1_set_motor_speed(DB1_M1, 0.1, analogResolution);
+    db1_set_motor_speed(DB1_M2, -0.1, analogResolution);
 
     for(int i = 0; i < DB1_IR_CALIBRATION_COUNT; i++)
     {
@@ -334,8 +332,8 @@ void db1_calibrate_ir_array()
         
         m_hal->delay_ms(DB1_IR_CALIBRATION_DELAY_MS);
     }
-    db1_set_motor_speed(DB1_M1, 0);
-    db1_set_motor_speed(DB1_M2, 0);
+    db1_set_motor_speed(DB1_M1, 0, analogResolution);
+    db1_set_motor_speed(DB1_M2, 0, analogResolution);
 }
 
 void db1_set_ir_calibration(db1_ir_array_t low, db1_ir_array_t high)
@@ -488,10 +486,10 @@ void db1_set_pen_pos(float pos)
     m_hal->servo_write(m_hal->pins.servo_pwm, val);
 }
 
-void db1_set_motor_speed(db1_motor_t motor, float speed)
+void db1_set_motor_speed(db1_motor_t motor, float speed, uint8_t analogResolution)
 {
     bool direction = speed > 0;
-    uint16_t pwm_val = (uint16_t)(fabs(speed) * UINT16_MAX);
+    uint16_t pwm_val = (uint16_t)(fabs(speed) * (pow(2, analogResolution) - 1));
 
     switch(motor)
     {

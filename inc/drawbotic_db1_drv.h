@@ -21,7 +21,7 @@ db1_error_t db1_init_imu(db1_imu_settings_t settings);
 db1_settings_t db1_get_current_settings();
 
 //IR array calibration functions
-void           db1_calibrate_ir_array();
+void           db1_calibrate_ir_array(uint8_t analogResolution);
 void           db1_set_ir_calibration(db1_ir_array_t low, db1_ir_array_t high);
 db1_ir_array_t db1_get_ir_high();
 db1_ir_array_t db1_get_ir_low();
@@ -47,7 +47,7 @@ void db1_set_pen(bool down);
 void db1_set_pen_pos(float pos);
 
 //Motor control
-void db1_set_motor_speed(db1_motor_t motor, float speed);
+void db1_set_motor_speed(db1_motor_t motor, float speed, uint8_t analogResolution);
 long db1_encoder_val(db1_motor_t motor);
 long db1_encoder_delta(db1_motor_t motor);
 void db1_reset_encoder_deltas();

@@ -28,7 +28,6 @@ typedef void     (*db1_hal_set_pinmode_t)(uint8_t pin, db1_hal_pinmode_t mode);
 typedef uint8_t  (*db1_hal_read_pin_t)(uint8_t pin);
 typedef void     (*db1_hal_set_pin_t)(uint8_t pin, uint8_t val);
 typedef uint16_t (*db1_hal_analog_read_t)(uint8_t pin);
-typedef void     (*db1_hal_analog_res_t)(uint8_t res);
 typedef void     (*db1_hal_set_pin_pwm_t)(uint8_t pin, uint16_t duty);
 typedef void     (*db1_hal_attach_int_t)(uint8_t pin, db1_hal_interrupt_type_t type, db1_hal_int_callback_t handler);
 typedef void     (*db1_hal_detach_int_t)(uint8_t pin);
@@ -92,7 +91,6 @@ typedef struct
     db1_hal_set_pin_t     digital_write;
     db1_hal_analog_read_t analog_read;
     db1_hal_set_pin_pwm_t analog_write;
-    db1_hal_analog_res_t  analog_resolution;
     db1_hal_attach_int_t  attach_interrupt;
     db1_hal_detach_int_t  detach_interrupt;
     db1_hal_i2c_t         i2c_read;
